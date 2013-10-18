@@ -16,6 +16,7 @@ void single_test()
 
 	invokeAll(groupId);
 	deleteProcGroup(groupId);
+	free(cmds);
 }
 
 void pipe_test2()
@@ -41,6 +42,8 @@ void pipe_test2()
 
 	invokeAll(groupId);
 	deleteProcGroup(groupId);
+	free(cmds_pstree );
+	free(cmds_grep);
 }
 
 void pipe_test3()
@@ -73,6 +76,9 @@ void pipe_test3()
 
 	invokeAll(groupId);
 	deleteProcGroup(groupId);
+	free(cmds_pstree);
+	free(cmds_grep);
+	free(cmds_grep2);
 }
 
 void inRedir_test()
@@ -94,6 +100,7 @@ void inRedir_test()
 
 	invokeAll(groupId);
 	deleteProcGroup(groupId);
+	free(cmds_cat);
 }
 
 void outRedir_test()
@@ -119,6 +126,27 @@ void outRedir_test()
 
 	invokeAll(groupId);
 	deleteProcGroup(groupId);
+	free(cmds_pstree);
+}
+
+void msgRedir_test()
+{
+	printf("run msgRedir_test\n");
+	GroupConfig gconfig = {1, SYNC_INVOKE, ENABLE, 0};
+
+	int groupId = createProcGroup(gconfig);
+
+	char **cmds_pstree = (char **)malloc(sizeof(char *) * 2);
+	cmds_pstree[0] = (char *)malloc(sizeof(char) * 256);
+	strncpy(cmds_pstree[0], "/usr/bin/pstree", 256);
+	cmds_pstree[1] = (char *)malloc(sizeof(char) * 256);
+	strncpy(cmds_pstree[1], "-p", 256);
+	addProcToGroup(groupId, 2, cmds_pstree);
+
+	invokeAll(groupId);
+	printf("%s\n", getOutMessage(groupId));
+	deleteProcGroup(groupId);
+	free(cmds_pstree);
 }
 
 int main()
@@ -129,7 +157,7 @@ int main()
 	pipe_test3();
 	inRedir_test();
 	outRedir_test();
+	msgRedir_test();
 	return 0;
-
 }
 
