@@ -2,6 +2,7 @@
 #include <ProcMan.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 void single_test()
 {
@@ -93,7 +94,7 @@ void inRedir_test()
 	strncpy(cmds_cat[0], "/usr/bin/cat", 256);
 	int procIndex = addProcToGroup(groupId, 1, cmds_cat);
 
-	RedirectConfig *rconfig = (RedirectConfig *)malloc(sizeof(RedirectConfig));
+	RedirConfig *rconfig = (RedirConfig *)malloc(sizeof(RedirConfig));
 	rconfig->fileName = (char *)malloc(sizeof(char) * 256);
 	strncpy(rconfig->fileName, "/home/skgchxngsxyz-work/proc.c", 256);
 	setRedirect(groupId, procIndex, 0, rconfig);
@@ -117,7 +118,7 @@ void outRedir_test()
 	strncpy(cmds_pstree[1], "-p", 256);
 	int procIndex = addProcToGroup(groupId, 2, cmds_pstree);
 
-	RedirectConfig *rconfig = (RedirectConfig *)malloc(sizeof(RedirectConfig));
+	RedirConfig *rconfig = (RedirConfig *)malloc(sizeof(RedirConfig));
 	rconfig->targetType = FILE_TARGET;
 //	rconfig->append = ENABLE;
 	rconfig->fileName = (char *)malloc(sizeof(char) * 256);
@@ -149,6 +150,42 @@ void msgRedir_test()
 	free(cmds_pstree);
 }
 
+void exitHandler(int flag)
+{
+	printf("in exitHandler !!\n");
+	switch(flag) {
+	case NORMAL_TERM:
+		printf("asynchronous process exit\n");
+		break;
+	case ERROR_TERM:
+		printf("asynchronous process error\n");
+		break;
+	case ALARM_TERM:
+		printf("asynchronous process killed\n");
+		break;
+	}
+}
+
+void timeout_test()
+{
+	printf("run timeout_test\n");
+	GroupConfig gconfig = {1, ASYNC_INVOKE, DISABLE, 3};
+
+	int groupId = createProcGroup(gconfig);
+
+	char **cmds_ping = (char **)malloc(sizeof(char *) * 2);
+	cmds_ping[0] = (char *)malloc(sizeof(char) * 256);
+	strncpy(cmds_ping[0], "/usr/bin/ping", 256);
+	cmds_ping[1] = (char *)malloc(sizeof(char) * 256);
+	strncpy(cmds_ping[1], "localhost", 256);
+	addProcToGroup(groupId, 2, cmds_ping);
+	setExitHandler(groupId, exitHandler);
+
+	invokeAll(groupId);
+	sleep(10);
+	free(cmds_ping);
+}
+
 int main()
 {
 	initContext();
@@ -158,6 +195,7 @@ int main()
 	inRedir_test();
 	outRedir_test();
 	msgRedir_test();
+	timeout_test();
 	return 0;
 }
 
